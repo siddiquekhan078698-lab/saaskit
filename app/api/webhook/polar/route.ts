@@ -14,11 +14,23 @@ export const POST = Webhooks({
       const supabase = createAdminClient();
       const subscription = payload.data;
       
-      let userId = null;
-      if (subscription.customer?.external_id) {
-        userId = subscription.customer.external_id;
+      const userId = subscription.customer?.external_id ?? null;
+      const customerEmail = subscription.customer?.email ?? null;
+
+      // Upsert user into public.users first to avoid FK violation.
+      // This handles cases where the user exists in auth.users but not public.users
+      // (e.g. signed up before the trigger was created, or via a different flow).
+      if (userId) {
+        const { error: userError } = await supabase.from('users').upsert({
+          id: userId,
+          email: customerEmail,
+        }, { onConflict: 'id', ignoreDuplicates: true });
+
+        if (userError) {
+          console.error("Supabase upsert error for user in onSubscriptionCreated:", userError);
+        }
       }
-      
+
       const { error } = await supabase.from('subscriptions').upsert({
         id: subscription.id,
         user_id: userId,
