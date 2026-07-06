@@ -9,7 +9,7 @@ export const POST = Webhooks({
   onPayload: async (payload: WebhookPayload) => {
     console.log("Polar webhook payload received:", payload.type);
   },
-  onSubscriptionCreated: async (payload) => {
+  onSubscriptionCreated: async (payload: any) => {
     const supabase = createAdminClient();
     const subscription = payload.data;
     
@@ -40,7 +40,7 @@ export const POST = Webhooks({
       current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
     });
   },
-  onSubscriptionUpdated: async (payload) => {
+  onSubscriptionUpdated: async (payload: any) => {
     const supabase = createAdminClient();
     const subscription = payload.data;
     
@@ -50,7 +50,7 @@ export const POST = Webhooks({
       current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
     }).eq('id', subscription.id);
   },
-  onSubscriptionRevoked: async (payload) => {
+  onSubscriptionRevoked: async (payload: any) => {
     const supabase = createAdminClient();
     const subscription = payload.data;
     
