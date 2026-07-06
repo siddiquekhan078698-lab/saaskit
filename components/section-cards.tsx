@@ -11,30 +11,48 @@ import {
 } from "@/components/ui/card"
 import { TrendUpIcon, TrendDownIcon } from "@phosphor-icons/react"
 
-export function SectionCards() {
+type Subscription = {
+  id: string
+  status: string
+  plan_id: string
+  current_period_end: string | null
+  email: string | null
+} | null
+
+interface SectionCardsProps {
+  subscription?: Subscription
+  planName?: string | null
+}
+
+export function SectionCards({ subscription, planName }: SectionCardsProps) {
+  const isActive = subscription?.status === "active"
+  const renewalDate = subscription?.current_period_end
+    ? new Date(subscription.current_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : null
+
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
+      {/* Subscription Status Card */}
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Revenue</CardDescription>
+          <CardDescription>Current Plan</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            $1,250.00
+            {planName ?? "Free"}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
-              <TrendUpIcon
-              />
-              +12.5%
+              {isActive ? <TrendUpIcon /> : <TrendDownIcon />}
+              {subscription?.status ?? "No plan"}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            Trending up this month{" "}
-            <TrendUpIcon className="size-4" />
+            {isActive ? "Subscription active" : "No active subscription"}
+            {isActive && <TrendUpIcon className="size-4" />}
           </div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            {renewalDate ? `Renews on ${renewalDate}` : "Upgrade to unlock features"}
           </div>
         </CardFooter>
       </Card>
