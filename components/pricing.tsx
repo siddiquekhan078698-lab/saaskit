@@ -20,7 +20,7 @@ export default function Pricing() {
                             <span className="my-3 block text-2xl font-semibold">$0 / mo</span>
 
                             <CardDescription className="text-sm">Per editor</CardDescription>
-                            <Button variant="outline" className="mt-4 w-full" render={<Link href="" />} nativeButton={false}>Get Started</Button>
+                            <Button variant="outline" className="mt-4 w-full" render={<Link href="/sign-up" />} nativeButton={false}>Get Started</Button>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
@@ -49,7 +49,7 @@ export default function Pricing() {
 
                             <CardDescription className="text-sm">Per editor</CardDescription>
 
-                            <Button className="mt-4 w-full" render={<Link href="" />} nativeButton={false}>Get Started</Button>
+                            <Button className="mt-4 w-full" render={<Link href={`/api/checkout?products=${process.env.POLAR_PRO_PLAN_ID}`} />} nativeButton={false}>Get Started</Button>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
@@ -76,7 +76,7 @@ export default function Pricing() {
 
                             <CardDescription className="text-sm">Per editor</CardDescription>
 
-                            <Button variant="outline" className="mt-4 w-full" render={<Link href="" />} nativeButton={false}>Get Started</Button>
+                            <Button variant="outline" className="mt-4 w-full" render={<Link href={`/api/checkout?products=${process.env.POLAR_STARTUP_PLAN_ID}`} />} nativeButton={false}>Get Started</Button>
                         </CardHeader>
 
                         <CardContent className="space-y-4">
