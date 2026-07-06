@@ -13,36 +13,32 @@ export const POST = Webhooks({
     try {
       const supabase = createAdminClient();
       const subscription = payload.data;
-      
-      const userId = subscription.customer?.external_id ?? null;
-      const customerEmail = subscription.customer?.email ?? null;
 
-      // Upsert user into public.users first to avoid FK violation.
-      // This handles cases where the user exists in auth.users but not public.users
-      // (e.g. signed up before the trigger was created, or via a different flow).
-      if (userId) {
-        const { error: userError } = await supabase.from('users').upsert({
-          id: userId,
-          email: customerEmail,
-        }, { onConflict: 'id', ignoreDuplicates: true });
+      // Extract user_id from customer.external_id (set during checkout)
+      const userId: string | null = subscription.customer?.external_id ?? null;
+      const customerEmail: string | null = subscription.customer?.email ?? null;
 
-        if (userError) {
-          console.error("Supabase upsert error for user in onSubscriptionCreated:", userError);
-        }
-      }
+      console.log("onSubscriptionCreated - userId:", userId, "email:", customerEmail);
 
+      // Upsert into subscriptions table
+      // No FK constraint on user_id, so this always succeeds
       const { error } = await supabase.from('subscriptions').upsert({
-        id: subscription.id,
-        user_id: userId,
-        polar_customer_id: subscription.customer_id,
-        status: subscription.status,
-        plan_id: subscription.product_id,
-        created_at: new Date(subscription.created_at).toISOString(),
-        current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
-      });
+        id: subscription.id,                           // text (PK - Polar subscription ID)
+        user_id: userId,                               // uuid (nullable, no FK)
+        email: customerEmail,                          // text (for lookup by email)
+        polar_customer_id: subscription.customer_id,  // text
+        status: subscription.status,                  // text
+        plan_id: subscription.product_id,             // text
+        current_period_end: subscription.current_period_end
+          ? new Date(subscription.current_period_end).toISOString()
+          : null,                                      // timestamptz
+        // created_at has a DB default, skip it to avoid conflict
+      }, { onConflict: 'id' });
 
       if (error) {
-        console.error("Supabase insert error in onSubscriptionCreated:", error);
+        console.error("Supabase upsert error in onSubscriptionCreated:", JSON.stringify(error));
+      } else {
+        console.log("Subscription inserted successfully:", subscription.id);
       }
     } catch (e) {
       console.error("Exception in onSubscriptionCreated:", e);
@@ -52,15 +48,25 @@ export const POST = Webhooks({
     try {
       const supabase = createAdminClient();
       const subscription = payload.data;
-      
-      const { error } = await supabase.from('subscriptions').update({
+
+      console.log("onSubscriptionUpdated - id:", subscription.id, "status:", subscription.status);
+
+      const { error } = await supabase.from('subscriptions').upsert({
+        id: subscription.id,
+        user_id: subscription.customer?.external_id ?? null,
+        email: subscription.customer?.email ?? null,
+        polar_customer_id: subscription.customer_id,
         status: subscription.status,
         plan_id: subscription.product_id,
-        current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
-      }).eq('id', subscription.id);
+        current_period_end: subscription.current_period_end
+          ? new Date(subscription.current_period_end).toISOString()
+          : null,
+      }, { onConflict: 'id' });
 
       if (error) {
-        console.error("Supabase update error in onSubscriptionUpdated:", error);
+        console.error("Supabase upsert error in onSubscriptionUpdated:", JSON.stringify(error));
+      } else {
+        console.log("Subscription updated successfully:", subscription.id);
       }
     } catch (e) {
       console.error("Exception in onSubscriptionUpdated:", e);
@@ -70,14 +76,20 @@ export const POST = Webhooks({
     try {
       const supabase = createAdminClient();
       const subscription = payload.data;
-      
+
+      console.log("onSubscriptionRevoked - id:", subscription.id);
+
       const { error } = await supabase.from('subscriptions').update({
         status: subscription.status,
-        current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end).toISOString() : null,
+        current_period_end: subscription.current_period_end
+          ? new Date(subscription.current_period_end).toISOString()
+          : null,
       }).eq('id', subscription.id);
 
       if (error) {
-        console.error("Supabase update error in onSubscriptionRevoked:", error);
+        console.error("Supabase update error in onSubscriptionRevoked:", JSON.stringify(error));
+      } else {
+        console.log("Subscription revoked successfully:", subscription.id);
       }
     } catch (e) {
       console.error("Exception in onSubscriptionRevoked:", e);
