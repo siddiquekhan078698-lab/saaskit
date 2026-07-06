@@ -2,7 +2,6 @@
 
 import * as React from "react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -48,6 +47,18 @@ const data = {
       ),
     },
   ],
+  documents: [
+    {
+      name: "Privacy Policy",
+      url: "#",
+      icon: <FileTextIcon />,
+    },
+    {
+      name: "Terms of Service",
+      url: "#",
+      icon: <FileTextIcon />,
+    },
+  ],
 }
 export function AppSidebar({ userProp, ...props }: React.ComponentProps<typeof Sidebar> & { userProp?: any }) {
   const [user, setUser] = React.useState(data.user)
@@ -79,7 +90,6 @@ export function AppSidebar({ userProp, ...props }: React.ComponentProps<typeof S
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
